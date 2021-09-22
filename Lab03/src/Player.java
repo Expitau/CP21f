@@ -8,16 +8,16 @@ public class Player{
   }
 
   public void attack(Player opponent){
-    int delta = (int)(Math.random()*5)+1;
+    int delta = (int) (Math.random() * 5) + 1;
     opponent.health -= delta;
     if(opponent.health < 0) opponent.health = 0;
   }
 
   public void heal(){
-    int delta = (int)(Math.random()*3)+1;
+    int delta = (int) (Math.random() * 3) + 1;
 
-    this.health += delta;
-    if(this.health > 50) this.health = 50;
+    health += delta;
+    if(health > 50) health = 50;
   }
 
   public boolean alive(){
@@ -25,8 +25,7 @@ public class Player{
   }
 
   public char getTactic(){
-    boolean attack = Math.random() < 0.7;
-    if(attack) return 'a';
+    if(Math.random() < 0.7) return 'a';
     return 'h';
   }
 }

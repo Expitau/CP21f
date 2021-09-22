@@ -1,13 +1,13 @@
 public class Main{
   public static void main(String[] args){
-    Player p1 = new Player("Superman");
-    Player p2 = new Player("Batman");
-    Fight fi = new Fight(p1, p2);
+    Player superman = new Player("Superman");
+    Player batman = new Player("Batman");
+    Fight fight = new Fight(superman, batman);
 
-    while(!fi.isFinished()){
-      fi.proceed();
+    while(!fight.isFinished()){
+      fight.proceed();
     }
-    Player winner = fi.getWinner();
-    System.out.println(winner.userId+" is the winner!");
+    String winnerId = fight.getWinner().userId;
+    System.out.println(winnerId + " is the winner!");
   }
 }
