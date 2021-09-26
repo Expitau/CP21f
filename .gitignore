@@ -30,3 +30,6 @@ hs_err_pid*
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+
+# Goorm IDE
+goorm.manifest
