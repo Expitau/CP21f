@@ -1,7 +1,3 @@
-import evolution_of_truth.agent.Agent;
-import evolution_of_truth.agent.Devil;
-import evolution_of_truth.agent.Copycat;
-import evolution_of_truth.match.Match;
 import evolution_of_truth.environment.Tournament;
 
 public class Main {
