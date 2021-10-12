@@ -33,3 +33,6 @@ out/
 
 # Goorm IDE
 goorm.manifest
+
+# MacOS Finder
+.DS_Store
