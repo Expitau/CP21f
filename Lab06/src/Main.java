@@ -13,7 +13,7 @@ public class Main {
         Scheduler<Worker> scheduler = new Scheduler<>(workers);
         while(!(workQueue.isEmpty())){
             System.out.printf("Scheduling work... (Remaining work: %d)\n", workQueue.size());
-            Worker worker = scheduler.schedule();
+            Worker worker = scheduler.scheduleFair();
             if (worker != null) {
                 worker.run();
             }

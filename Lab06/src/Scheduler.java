@@ -1,6 +1,6 @@
 import java.util.List;
 
-public class Scheduler<T> {
+public class Scheduler<T extends Worker> {
     private static final int waitms = 400;
     private List<T> workers;
 
@@ -13,18 +13,34 @@ public class Scheduler<T> {
     }
 
     T schedule(int index) {
-        // TODO: problem3.1 - Add scheduling logic
-        return null;
+        if(0 <= index && index < workers.size()){
+            return workers.get(index);
+        }else{
+            return workers.get(0);
+        }
     }
 
     T scheduleRandom() {
-        // TODO: problem3.1 - Add scheduling logic
-        return null;
+        int index = (int) (Math.random() * workers.size());
+        return workers.get(index);
     }
 
     T scheduleFair() {
-        // TODO: problem3.2 - Add scheduling logic
-        return null;
+        T lastWorker = workers.get(0);
+        for (T worker : workers) {
+            if (worker.getTime() > lastWorker.getTime()) {
+                lastWorker = worker;
+            }
+        }
+        incrementTime();
+        lastWorker.resetTime();
+        return lastWorker;
+    }
+
+    private void incrementTime(){
+        for (T worker : workers){
+            worker.incrementTime();
+        }
     }
 
     static void delay() {
