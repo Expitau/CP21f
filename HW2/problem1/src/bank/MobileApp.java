@@ -44,10 +44,9 @@ public class MobileApp {
 
     public boolean processResponse(Encrypted<Boolean> obj) {
         //TODO: Problem 1.3
+        if(obj == null) return false;
         Boolean res = obj.decrypt(bankSymKey);
-        if(res == null){
-            return false;
-        }
+        if(res == null) return false;
         return res;
     }
 }

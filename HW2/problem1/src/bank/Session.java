@@ -22,7 +22,7 @@ public class Session {
 
     private void insTransCnt(){
         transCnt += 1;
-        if(transCnt == transLimit){
+        if(transCnt >= transLimit){
             expireSession();
         }
     }
