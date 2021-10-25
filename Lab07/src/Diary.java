@@ -31,26 +31,36 @@ public class Diary {
         // Practice 2 - Store the created entry in a file
     }
 
-    public void listEntries(boolean titleOrder) {
-        if(titleOrder) sortEntriesTitleOrder();
-        else sortEntriesTimeOrder();
+    public void listEntries(){
+        listEntries(false, false);
+    }
+
+    public void listEntries(boolean titleOrder, boolean lengthOrder) {
+        if(titleOrder) sortEntriesTitleOrder(lengthOrder);
+        else sortEntriesIDOrder();
         
         Iterator<DiaryEntry> iterator = diaryEntries.iterator();
         while (iterator.hasNext()) {
             DiaryEntry entry = iterator.next();
-            DiaryUI.print(entry.getShortString());
+            if(lengthOrder) DiaryUI.print(entry.getShortString() + ", length: "+entry.getContent().length());
+            else DiaryUI.print(entry.getShortString());
         }
         // Practice 2 - Your list should contain previously stored files
     }
 
-    private void sortEntriesTimeOrder(){
+    private void sortEntriesIDOrder(){
         Collections.sort(diaryEntries, (o1, o2) -> {
-            return o1.getDate().compareTo(o2.getTitle());
+            if(o1.getID() < o2.getID()) return -1;
+            return 1;
         });
     }
 
-    private void sortEntriesTitleOrder(){
+    private void sortEntriesTitleOrder(boolean checkLength){
         Collections.sort(diaryEntries, (o1, o2) -> {
+            if(checkLength && o1.getTitle().equals(o2.getTitle())){
+                if(o1.getContent().length() < o2.getContent().length()) return 1;
+                return -1;
+            }
             return o1.getTitle().compareTo(o2.getTitle());
         });
     }

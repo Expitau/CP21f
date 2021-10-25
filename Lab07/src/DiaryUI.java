@@ -20,14 +20,18 @@ public class DiaryUI {
         String commandName = commandSlices[0];
         int argNum = commandSlices.length;
 
-        if (commandName.equals("exit")) {
+        if (commandName.equals("exit"))
             return false;
-        }
 
         if (commandName.equals("create") && argNum == 1) {
             diary.createEntry();
         } else if (commandName.equals("list") && argNum == 1) {
             diary.listEntries();
+        } else if (commandName.equals("list") && argNum == 2 && commandSlices[1].equals("title")) {
+            diary.listEntries(true, false);
+        } else if (commandName.equals("list") && argNum == 3 && commandSlices[1].equals("title")
+                && commandSlices[2].equals("length")) {
+            diary.listEntries(true, true);
         } else if (commandName.equals("read") && argNum == 2) {
             int id = Integer.parseInt(commandSlices[1]);
             diary.readEntry(id);
