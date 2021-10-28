@@ -36,35 +36,25 @@ public class Diary {
     }
 
     public void listEntries(boolean titleOrder, boolean lengthOrder) {
-        if(titleOrder) sortEntriesTitleOrder(lengthOrder);
-        else sortEntriesIDOrder();
+        List<DiaryEntry> tempList = new LinkedList<DiaryEntry>(this.diaryEntries);
+        if(titleOrder){
+            if(lengthOrder){
+                Collections.sort(tempList, new titleLengthSort());
+                DiaryUI.print("List entries sorted by title and length.");
+            }else{
+                Collections.sort(tempList, new titleSort());
+                DiaryUI.print("List entries sorted by title.");
+            }
+        }
         
-        Iterator<DiaryEntry> iterator = diaryEntries.iterator();
+        Iterator<DiaryEntry> iterator = tempList.iterator();
         while (iterator.hasNext()) {
             DiaryEntry entry = iterator.next();
-            if(lengthOrder) DiaryUI.print(entry.getShortString() + ", length: "+entry.getContent().length());
+            if(lengthOrder) DiaryUI.print(entry.getShortString() + ", length: "+entry.getContent().split("\\s").length);
             else DiaryUI.print(entry.getShortString());
         }
         // Practice 2 - Your list should contain previously stored files
     }
-
-    private void sortEntriesIDOrder(){
-        Collections.sort(diaryEntries, (o1, o2) -> {
-            if(o1.getID() < o2.getID()) return -1;
-            return 1;
-        });
-    }
-
-    private void sortEntriesTitleOrder(boolean checkLength){
-        Collections.sort(diaryEntries, (o1, o2) -> {
-            if(checkLength && o1.getTitle().equals(o2.getTitle())){
-                if(o1.getContent().length() < o2.getContent().length()) return 1;
-                return -1;
-            }
-            return o1.getTitle().compareTo(o2.getTitle());
-        });
-    }
-
 
     private DiaryEntry findEntry(int id) {
         for (DiaryEntry entry : diaryEntries) {
@@ -118,5 +108,26 @@ public class Diary {
             DiaryUI.print(entry.getFullString()+"\n");
         }
         // Practice 2 - Your search should contain previously stored files
+    }
+}
+
+class titleSort implements Comparator<DiaryEntry>{
+    @Override
+    public int compare(DiaryEntry entry1, DiaryEntry entry2){
+        return entry1.getTitle().compareTo(entry2.getTitle());
+    }
+}
+
+class titleLengthSort implements Comparator<DiaryEntry>{
+    @Override
+    public int compare(DiaryEntry entry1, DiaryEntry entry2){
+        if(!entry1.getTitle().equals(entry2.getTitle())){
+            return entry1.getTitle().compareTo(entry2.getTitle());
+        }
+
+        int length1 = entry1.getContent().split("\\s").length;
+        int length2 = entry2.getContent().split("\\s").length;
+        if(length1 == length2) return 0;
+        return length1 < length2 ? 1 : -1;
     }
 }
