@@ -4,6 +4,7 @@ public class Movie {
     private String title;
     private Set<String> tags;
     private Map<String, Integer> rates = new HashMap<>();
+    public Movie(String title) {this.title = title; this.tags = new HashSet<String>();}
     public Movie(String title, Set<String> tags) { this.title = title; this.tags = tags;}
     public boolean containsTag(String[] tags){
         Set<String> tagSet = new HashSet<>();
