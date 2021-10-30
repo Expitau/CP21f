@@ -20,24 +20,24 @@ public class Test {
             print(prompt + " : X");
         }
     }
-    
-    static void print(Object o){
+
+    static void print(Object o) {
         System.out.println(o);
     }
-    
+
     static void onTest(String testName, String authInput, String postInput, String output) {
         Boolean DEBUG = false;
-        
+
         UserInterface ui = new UserInterface();
         BackEnd backend = new BackEnd();
-        FrontEnd frontEnd = new FrontEnd(ui,backend);
+        FrontEnd frontEnd = new FrontEnd(ui, backend);
         ui.createUITest(frontEnd, authInput, postInput);
         ui.run();
 
         try {
             String content = Files.readString(Paths.get(output)).replaceAll("\\s", "");
             String content2 = (ui.authView.getOutput() + ui.postView.getOutput()).replaceAll("\\s", "");
-            if(DEBUG){
+            if (DEBUG) {
                 System.out.println("=============\n\nMaded content!!!\n\n\n\n");
                 System.out.println((ui.authView.getOutput() + ui.postView.getOutput()));
             }

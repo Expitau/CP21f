@@ -10,10 +10,10 @@ public class FrontEnd {
         this.ui = ui;
         this.backend = backend;
     }
-    
-    public boolean auth(String authInfo){
+
+    public boolean auth(String authInfo) {
         String[] info = authInfo.split("\n"); // TODO check it's alright
-        if(backend.auth(info[0], info[1])){
+        if (backend.auth(info[0], info[1])) {
             user = new User(info[0], info[1]);
             return true;
         }
@@ -25,10 +25,10 @@ public class FrontEnd {
         post.setId(backend.getNextPostID(user));
         backend.makePost(user, post);
     }
-    
-    public void recommend(int N){
+
+    public void recommend(int N) {
         List<Post> posts = backend.getFriendsLeastNPostList(user.id, N);
-        for(Post post : posts){
+        for (Post post : posts) {
             ui.println(post.toString());
         }
     }
@@ -37,13 +37,13 @@ public class FrontEnd {
         List<String> keywordList = new LinkedList<>(Arrays.asList(command.split("\\s")));
         keywordList.remove(0);
         List<Post> posts = backend.getKeywordContainPostList(new HashSet<String>(keywordList));
-        
-        for(Post post : posts){
+
+        for (Post post : posts) {
             ui.println(post.getSummary());
         }
     }
-    
-    User getUser(){
+
+    User getUser() {
         return user;
     }
 }
