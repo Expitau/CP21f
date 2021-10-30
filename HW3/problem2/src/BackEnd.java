@@ -17,7 +17,7 @@ public class BackEnd extends ServerResourceAccessible {
             ret = pw.equals(realPw);
             input.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            ret = false;
         }
         return ret;
     }
@@ -47,7 +47,7 @@ public class BackEnd extends ServerResourceAccessible {
             fileWriter.write(outputString);
             fileWriter.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
     }
 
@@ -66,7 +66,7 @@ public class BackEnd extends ServerResourceAccessible {
             }
             input.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
         Post ret = new Post(id, dateString, title, content);
         return ret;
@@ -103,7 +103,7 @@ public class BackEnd extends ServerResourceAccessible {
             }
             input.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            
         }
         return friends;
     }
@@ -119,7 +119,7 @@ public class BackEnd extends ServerResourceAccessible {
                     Post post = getPost(postFile);
                     ret.add(post);
                 } catch (Exception e) {
-                    e.printStackTrace();
+
                 }
             }
         }
