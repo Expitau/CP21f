@@ -12,12 +12,18 @@ public class FrontEnd {
     }
     
     public boolean auth(String authInfo){
-        // TODO sub-problem 1
+        String[] info = authInfo.split("\n"); // TODO check it's alright
+        if(backend.auth(info[0], info[1])){
+            user = new User(info[0], info[1]);
+            return true;
+        }
         return false;
     }
 
     public void post(Pair<String, String> titleContentPair) {
-        // TODO sub-problem 2
+        Post post = new Post(titleContentPair.key, titleContentPair.value);
+        post.setId(backend.getNextPostID(user));
+        backend.makePost(user, post);
     }
     
     public void recommend(int N){
