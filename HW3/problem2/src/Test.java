@@ -9,8 +9,8 @@ public class Test {
         onTest("Test 1 - Login O", rootAuthFile, "test/exit_post.in", "test/1_1.out");
         onTest("Test 1 - Login X", "test/1.in", "test/exit_post.in", "test/1_2.out");
         onTest("Test 2", rootAuthFile, "test/2_post.in", "test/2.out");
-        //onTest("Test 3", rootAuthFile, "test/3_post.in", "test/3.out");
-        //onTest("Test 4", rootAuthFile, "test/4_post.in", "test/4.out");
+        onTest("Test 3", rootAuthFile, "test/3_post.in", "test/3.out");
+        onTest("Test 4", rootAuthFile, "test/4_post.in", "test/4.out");
     }
 
     static void printOX(String prompt, boolean condition) {
@@ -26,6 +26,8 @@ public class Test {
     }
     
     static void onTest(String testName, String authInput, String postInput, String output) {
+        Boolean DEBUG = false;
+        
         UserInterface ui = new UserInterface();
         BackEnd backend = new BackEnd();
         FrontEnd frontEnd = new FrontEnd(ui,backend);
@@ -35,6 +37,10 @@ public class Test {
         try {
             String content = Files.readString(Paths.get(output)).replaceAll("\\s", "");
             String content2 = (ui.authView.getOutput() + ui.postView.getOutput()).replaceAll("\\s", "");
+            if(DEBUG){
+                System.out.println("=============\n\nMaded content!!!\n\n\n\n");
+                System.out.println((ui.authView.getOutput() + ui.postView.getOutput()));
+            }
             printOX(testName, content2.equals(content));
         } catch (IOException e) {
             e.printStackTrace();

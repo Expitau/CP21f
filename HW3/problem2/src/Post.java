@@ -20,6 +20,13 @@ class Post {
         this.content = content.trim();
     }
 
+    Post(int id, String dateString, String title, String content) {
+        this.id = id;
+        this.dateTime = parseDateTimeString(dateString, formatter);
+        this.title = title;
+        this.content = content.trim();
+    }
+
     String getSummary() {
         return String.format("id: %d, created at: %s, title: %s", id, getDate(), title);
     }

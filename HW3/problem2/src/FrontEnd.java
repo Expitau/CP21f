@@ -27,11 +27,20 @@ public class FrontEnd {
     }
     
     public void recommend(int N){
-        // TODO sub-problem 3
+        List<Post> posts = backend.getFriendsLeastNPostList(user.id, N);
+        for(Post post : posts){
+            ui.println(post.toString());
+        }
     }
 
     public void search(String command) {
-        // TODO sub-problem 4
+        List<String> keywordList = new LinkedList<>(Arrays.asList(command.split("\\s")));
+        keywordList.remove(0);
+        List<Post> posts = backend.getKeywordContainPostList(new HashSet<String>(keywordList));
+        
+        for(Post post : posts){
+            ui.println(post.getSummary());
+        }
     }
     
     User getUser(){
