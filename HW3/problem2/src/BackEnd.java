@@ -183,15 +183,12 @@ public class BackEnd extends ServerResourceAccessible {
         for(Post post : posts){
             List<String> words = new LinkedList<String>(Arrays.asList(post.getContent().split("\\s")));
             words.addAll(Arrays.asList(post.getTitle().split("\\s")));
-
-            Set<String> wordSet = new HashSet<>(words);
-            if(wordSet.containsAll(keywords)){
-                int keywordCnt = 0;
-                for(String word : words){
-                    if(keywords.contains(word)) keywordCnt++;
-                }
-                proceccedPosts.add(new PostKeywordCnt(post, keywordCnt, words.size()));
+            
+            int keywordCnt = 0;
+            for(String word : words){
+                if(keywords.contains(word)) keywordCnt++;
             }
+            proceccedPosts.add(new PostKeywordCnt(post, keywordCnt, words.size()));
         }
 
         sortPostKeywordCnt(proceccedPosts);
