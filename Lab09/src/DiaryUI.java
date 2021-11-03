@@ -4,7 +4,7 @@ public class DiaryUI {
     private static Diary diary;
     private static Scanner scanner;
 
-    static void initializeDiaryUI(){
+    static void initializeDiaryUI() throws NoDataDirectoryException {
         diary = new Diary();
         scanner = new Scanner(System.in);
     }
@@ -20,7 +20,7 @@ public class DiaryUI {
         System.out.println("\t" + object);
     }
 
-    private static boolean runCommand(String command) {
+    private static boolean runCommand(String command) throws NoDataDirectoryException {
         String[] commandSlices = command.split(" ");
         String commandName = commandSlices[0];
         int argNum = commandSlices.length;
@@ -35,7 +35,8 @@ public class DiaryUI {
             diary.listEntries();
         } else if (commandName.equals("list") && commandSlices[1].equals("title") && argNum == 2) {
             diary.listEntries("title");
-        } else if (commandName.equals("list") && commandSlices[1].equals("title") && commandSlices[2].equals("length") && argNum ==3){
+        } else if (commandName.equals("list") && commandSlices[1].equals("title") && commandSlices[2].equals("length")
+                && argNum == 3) {
             diary.listEntries("title", "length");
         } else if (commandName.equals("read") && argNum == 2) {
             int id = Integer.parseInt(commandSlices[1]);
@@ -55,17 +56,24 @@ public class DiaryUI {
     public static void main(String[] args) {
         String command;
 
-        //TODO: Practice 3 (1), (4)
-        initializeDiaryUI();
-        do {
-            System.out.println("\nType a command");
-            print("create: Create a diary entry");
-            print("list: List diary entries");
-            print("read <id>: Read a diary entry with <id>");
-            print("delete <id>: Delete a diary entry with <id>");
-            print("search <keyword>: List diary entries whose contents contain <keyword>");
-            System.out.print("Command: ");
-            command = scanner.nextLine();
-        } while (runCommand(command));
+        // TODO: Practice 3 (1), (4)
+        try {
+            initializeDiaryUI();
+            do {
+                System.out.println("\nType a command");
+                print("create: Create a diary entry");
+                print("list: List diary entries");
+                print("read <id>: Read a diary entry with <id>");
+                print("delete <id>: Delete a diary entry with <id>");
+                print("search <keyword>: List diary entries whose contents contain <keyword>");
+                System.out.print("Command: ");
+                command = scanner.nextLine();
+            } while (runCommand(command));
+        } catch (NoDataDirectoryException e) {
+            // TODO: handle exception
+            System.out.println("Diary directory data/ is not found.");
+        } finally {
+            System.out.println("Diary application terminated successfully.");
+        }
     }
 }

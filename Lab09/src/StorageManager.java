@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class StorageManager {
 
     /* Save string lines into as a file */
-    public static void writeLines(String fileName, List<String> strings) {
+    public static void writeLines(String fileName, List<String> strings) throws NoDataDirectoryException {
         try {
             FileWriter fileWriter = new FileWriter(fileName);
             for (String string : strings) {
@@ -19,7 +19,7 @@ public class StorageManager {
             fileWriter.close();
         } catch (IOException e) {
             //TODO: Practice 3 - (3)
-            e.printStackTrace();
+            throw new NoDataDirectoryException();
         }
     }
 
@@ -27,7 +27,7 @@ public class StorageManager {
      * Read string lines of files in a specified directory.
      * The files are sorted by their names.
      */
-    public static List<List<String>> directoryChildrenLines(String directoryName) {
+    public static List<List<String>> directoryChildrenLines(String directoryName) throws NoDataDirectoryException {
         List<List<String>> childrenLines = new LinkedList<>();
         for (File childFile : nameSortedDirectoryFiles(directoryName)) {
             List<String> lines = readLines(childFile);
@@ -69,11 +69,17 @@ public class StorageManager {
         return strings;
     }
 
-    private static File[] nameSortedDirectoryFiles(String directoryName) {
+    private static File[] nameSortedDirectoryFiles (String directoryName) throws NoDataDirectoryException {
         //TODO: Practice 3 - (2)
-        File[] directoryFiles = directoryFiles(directoryName);
-        Arrays.sort(directoryFiles, Comparator.comparing(File::getName));
-        return directoryFiles;
+        try {
+            File[] directoryFiles = directoryFiles(directoryName);
+            Arrays.sort(directoryFiles, Comparator.comparing(File::getName));
+            return directoryFiles;
+        } catch (NullPointerException e) {
+            //TODO: handle exception
+            throw new NoDataDirectoryException();
+        }
+        
     }
 
     private static File[] directoryFiles(String directoryName) {
