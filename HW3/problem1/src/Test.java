@@ -11,8 +11,8 @@ public class Test {
 
     static MovieApp initializeMovieApp() {
         MovieApp movieApp = new MovieApp();
-        movieApp.addMovie("Toy Story", new String[] {"love", "touching"});
         movieApp.addMovie("La La Land", new String[] {"touching", "love"});
+        movieApp.addMovie("Toy Story", new String[] {"love", "touching"});
         movieApp.addMovie("The Jocker", new String[] {"dark", "touching"});
         movieApp.addMovie("Avengers", new String[] {});
         movieApp.addUser("Olivia");

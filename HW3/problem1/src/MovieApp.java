@@ -50,6 +50,13 @@ public class MovieApp {
             Movie movie = movies.get(key);
             if(movie.containsTag(tags)) ret.add(movie);
         }
+        Collections.sort(ret, new Comparator<Movie>() {
+            @Override
+            public int compare(Movie o1, Movie o2){
+                return o2.toString().compareTo(o1.toString());
+            }
+        });
+        
         return ret;
     }
 
@@ -58,7 +65,7 @@ public class MovieApp {
         if(title == null || user == null) return false;
         String username = user.toString();
         if(findUser(username) == null || findMovie(title) == null) return false;
-        if(rating < 0 || rating > 5) return false;
+        if(rating < 1 || rating > 5) return false;
 
         // rate
         if(!ratings.containsKey(username)) ratings.put(username, new HashMap<String, Integer>());
@@ -93,12 +100,14 @@ public class MovieApp {
         if(!searchHistories.containsKey(username)) searchHistories.put(username, new LinkedList<List<Movie>>());
         List<List<Movie>> history = searchHistories.get(username);
         history.add(ret);
+
         return ret;
     }
 
     public List<Movie> recommend(User user) {
         // TODO sub-problem 4
         List<Movie> ret = new LinkedList<>();
+
         if(user == null) return ret;
         String username = user.toString();
         if(findUser(username) == null) return ret;
@@ -130,6 +139,7 @@ public class MovieApp {
                 break;
             }
         }
+        
         if(ret.size() > 3) ret = ret.subList(0, 3);
 
         return ret;
