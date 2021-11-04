@@ -29,7 +29,6 @@ public class Diary {
     private DiaryEntry getEntry(List<String> fileContent) {
         if (fileContent.size() < 4)
             return null;
-        Iterator<String> iter = fileContent.iterator();
         int id = Integer.parseInt(fileContent.get(0));
         String createdTime = fileContent.get(1);
         String title = fileContent.get(2);
