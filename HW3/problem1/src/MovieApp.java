@@ -133,13 +133,16 @@ public class MovieApp {
                     break;
                 }
                 if(movieCount.get(title) < movieCount.get(ret.get(i).toString())) continue;
-                if(movie.getDoubledMedieanRate() < ret.get(i).getDoubledMedieanRate()) continue;
-                if(movie.toString().compareTo(ret.get(i).toString()) > 0) continue;
+                else if(movieCount.get(title) == movieCount.get(ret.get(i).toString())){
+                    if(movie.getDoubledMedieanRate() < ret.get(i).getDoubledMedieanRate()) continue;
+                    else if(movie.getDoubledMedieanRate() == ret.get(i).getDoubledMedieanRate())
+                        if(movie.toString().compareTo(ret.get(i).toString()) > 0) continue;
+                }
                 ret.add(i, movie);
                 break;
             }
         }
-        
+
         if(ret.size() > 3) ret = ret.subList(0, 3);
 
         return ret;
