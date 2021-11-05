@@ -22,7 +22,7 @@ public class FrontEnd {
 
     public void post(Pair<String, String> titleContentPair) {
         Post post = new Post(titleContentPair.key, titleContentPair.value);
-        post.setId(backend.getNextPostID(user));
+        post.setId(backend.getNextPostID());
         backend.makePost(user, post);
     }
 

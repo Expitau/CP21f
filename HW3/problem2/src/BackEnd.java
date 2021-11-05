@@ -11,11 +11,9 @@ public class BackEnd extends ServerResourceAccessible {
     public boolean auth(String id, String pw) {
         File pwFile = new File(getServerStorageDir() + id + "/password.txt");
         boolean ret = false;
-        try {
-            Scanner input = new Scanner(pwFile);
+        try(Scanner input = new Scanner(pwFile)){
             String realPw = input.nextLine();
-            ret = pw.equals(realPw);
-            input.close();
+            ret = pw.toLowerCase().equals(realPw.toLowerCase()); // case insensitive
         } catch (Exception e) {
             ret = false;
         }
@@ -26,15 +24,23 @@ public class BackEnd extends ServerResourceAccessible {
         return Integer.parseInt(postFile.getName().split("\\.txt")[0]);
     }
 
-    public int getNextPostID(User user) {
+    public int getMaxPostID(String userID) {
         int ret = -1;
-        File postFolder = new File(getServerStorageDir() + user.id + "/post");
+        File postFolder = new File(getServerStorageDir() + userID + "/post");
         File[] postList = postFolder.listFiles();
-        for (int i = 0; i < postList.length; i++) {
-            if (postList[i].isFile()) {
-                int postId = getPostID(postList[i]);
-                ret = Math.max(ret, postId);
+        for (File post : postList) {
+            if (post.isFile()) {
+                ret = Math.max(ret, getPostID(post));
             }
+        }
+        return ret;
+    }
+
+    public int getNextPostID(){
+        List<String> usersID = getuserIDList();
+        int ret = -1;
+        for(String userID : usersID){
+            ret = Math.max(ret, getMaxPostID(userID));
         }
         return ret + 1;
     }
@@ -42,32 +48,27 @@ public class BackEnd extends ServerResourceAccessible {
     public void makePost(User user, Post post) {
         File postFile = new File(getServerStorageDir() + user.id + "/post/" + post.getId());
         String outputString = String.format("%s\n%s\n\n%s", post.getDate(), post.getTitle(), post.getContent());
-        try {
-            FileWriter fileWriter = new FileWriter(postFile);
+        try( FileWriter fileWriter = new FileWriter(postFile)){
             fileWriter.write(outputString);
-            fileWriter.close();
         } catch (Exception e) {
-            
+            // not to do.....
         }
     }
 
     public Post getPost(File postFile) {
-        String dateString = "", title = "", content = "";
+        String dateString, title, content;
         int id = getPostID(postFile);
-        try {
-            Scanner input = new Scanner(postFile);
+        try(Scanner input = new Scanner(postFile)){
             dateString = input.nextLine();
             title = input.nextLine();
-            input.nextLine();
-
+            input.nextLine(); // blank line
             content = "";
-            while (input.hasNext()) {
-                content += input.nextLine() + "\n";
-            }
-            input.close();
+            while (input.hasNext()) content += input.nextLine() + "\n";
+            content = content.stripTrailing();
         } catch (Exception e) {
-            
+            return null;
         }
+
         Post ret = new Post(id, dateString, title, content);
         return ret;
     }
@@ -96,14 +97,11 @@ public class BackEnd extends ServerResourceAccessible {
     public List<String> getUserFriendList(String userID) {
         List<String> friends = new LinkedList<>();
         File friendsFile = new File(getServerStorageDir() + userID + "/friend.txt");
-        try {
-            Scanner input = new Scanner(friendsFile);
-            while (input.hasNextLine()) {
+        try(Scanner input = new Scanner(friendsFile)) {
+            while (input.hasNextLine())
                 friends.add(input.nextLine());
-            }
-            input.close();
         } catch (Exception e) {
-            
+            return new LinkedList<>();
         }
         return friends;
     }
@@ -113,6 +111,7 @@ public class BackEnd extends ServerResourceAccessible {
 
         File postFolder = new File(getServerStorageDir() + userID + "/post");
         File[] postList = postFolder.listFiles();
+
         for (File postFile : postList) {
             if (postFile.isFile()) {
                 try {
@@ -123,6 +122,7 @@ public class BackEnd extends ServerResourceAccessible {
                 }
             }
         }
+
         return ret;
     }
 
@@ -161,17 +161,17 @@ public class BackEnd extends ServerResourceAccessible {
     public List<Post> getKeywordContainPostList(Set<String> keywords) {
         List<String> userIDs = getuserIDList();
         List<PostKeywordCnt> posts = new LinkedList<>();
-        for (String userID : userIDs) {
+
+        for (String userID : userIDs)
             posts.addAll(getKeywordedUserPostList(userID, keywords));
-        }
+        
         sortPostKeywordCnt(posts);
         if (posts.size() > 10)
             posts = posts.subList(0, 10);
 
         List<Post> ret = new LinkedList<>();
-        for (PostKeywordCnt post : posts) {
+        for (PostKeywordCnt post : posts) 
             ret.add(post.post);
-        }
 
         return ret;
     }
