@@ -10,8 +10,8 @@ int main(){
     cin >> str2;
 
     char * str1_pointer = str1, * str2_pointer = str2;
-    while(*str1_pointer) str1_pointer++;
-    while(*str2_pointer) *(str1_pointer++) = *(str2_pointer++);
+    while(*(++str1_pointer));
+    while((*(str1_pointer++) = *(str2_pointer++)));
     *str1_pointer = 0;
 
     cout << str1;
