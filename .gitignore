@@ -36,3 +36,7 @@ goorm.manifest
 
 # MacOS Finder
 .DS_Store
+
+# Clion
+cmake-build-*/
+CMakeLists.txt
