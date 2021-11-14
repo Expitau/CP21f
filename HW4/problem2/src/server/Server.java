@@ -12,6 +12,7 @@ import java.util.*;
 public class Server {
 
     private static final String COURSE_PATH = "data/Courses/2020_Spring/";
+    private static final String USER_PATH = "data/Users/";
 
     private boolean checkCondition(Course course, Map<String,Object> searchConditions){
         String dc = null, nc = null;
@@ -38,7 +39,7 @@ public class Server {
         });
     }
 
-    private Course getCourse(String coursePath){
+    private Course getCourseFromPath(String coursePath){
         Course course = null;
         
         try (Scanner input = new Scanner(new File(coursePath))){
@@ -66,15 +67,25 @@ public class Server {
         return course;
     }
 
-    private List<Course> getFilteredCollegeCourses(String collage,  Map<String,Object> searchConditions){
-        String collagePath = COURSE_PATH + collage + "/";
-        
-        File collageDir = new File(collagePath);
-        File[] courseFiles = getValidFiles(collageDir);
+    private Course getCourseFromId(int courseId){
+        File courseDir = new File(COURSE_PATH);
+        File[] collegeFiles = getValidFiles(courseDir);
+        for(File collegeFile : collegeFiles){
+            File courseFile = new File(collegeFile, courseId + ".txt");
+            if(courseFile.exists()){
+                return getCourseFromPath(courseFile.getPath());
+            }
+        }
+        return null;
+    }
+
+    private List<Course> getFilteredCollegeCourses(String college,  Map<String,Object> searchConditions){
+        File collegeDir = new File(COURSE_PATH, college);
+        File[] courseFiles = getValidFiles(collegeDir);
         List<Course> courses = new LinkedList<>();
 
         for(File courseFile : courseFiles){
-            Course course = getCourse(courseFile.getPath());
+            Course course = getCourseFromPath(courseFile.getPath());
 
             if(checkCondition(course, searchConditions))
                 courses.add(course);
@@ -84,11 +95,11 @@ public class Server {
 
     private List<Course> getFilteredCourses(Map<String, Object> searchConditions){
         File courseDir = new File(COURSE_PATH);
-        File[] collageFiles = getValidFiles(courseDir);
+        File[] collegeFiles = getValidFiles(courseDir);
         List<Course> courses = new LinkedList<>();
 
-        for(File collageFile : collageFiles){
-            courses.addAll(getFilteredCollegeCourses(collageFile.getName(), searchConditions));
+        for(File collegeFile : collegeFiles){
+            courses.addAll(getFilteredCollegeCourses(collegeFile.getName(), searchConditions));
         }
 
         return courses;
@@ -148,15 +159,75 @@ public class Server {
         return courses;
     }
 
+    private void updateBidsList(List<Bidding> bids, int courseId, int mileage){ // need check cousrId before!!!!!
+        Iterator<Bidding> iter = bids.iterator();
+        while(iter.hasNext()){
+            Bidding bid = iter.next();
+            if(bid.courseId == courseId){
+                bid.mileage = mileage;
+                if(mileage == 0) iter.remove();
+                return;
+            }
+        }
+        if(mileage != 0) bids.add(new Bidding(courseId, mileage));
+    }
+
+    private void writeBidTxt(List<Bidding> bids, String userId) throws IOException{
+        File bidFile = new File(USER_PATH + userId + "/bid.txt");
+        try(FileWriter output = new FileWriter(bidFile)){
+            for(Bidding bid : bids){
+                output.write(bid.courseId + "|" + bid.mileage + "\n");
+            }
+        }
+    }
+
     public int bid(int courseId, int mileage, String userId){ // Problem 2-2
+        if(mileage < 0) return ErrorCode.NEGATIVE_MILEAGE;
+        if(mileage > Config.MAX_MILEAGE_PER_COURSE) return ErrorCode.OVER_MAX_COURSE_MILEAGE;
         
-        return ErrorCode.IO_ERROR;
+        Course course = getCourseFromId(courseId);
+        if(course == null) return ErrorCode.NO_COURSE_ID;
+        
+        Pair<Integer, List<Bidding>> retBids = retrieveBids(userId);
+        if(retBids.key != ErrorCode.SUCCESS) return retBids.key; // user_checked and IOEXCEPTIN
+        
+        updateBidsList(retBids.value, courseId, mileage);
+        if(retBids.value.size() > Config.MAX_COURSE_NUMBER) return ErrorCode.OVER_MAX_COURSE_NUMBER;
+        
+        int totBids = 0;
+        for(Bidding bid : retBids.value) totBids += bid.mileage;
+        if(totBids > Config.MAX_MILEAGE) return ErrorCode.OVER_MAX_MILEAGE;
+        
+        try {
+            writeBidTxt(retBids.value, userId);
+        } catch (IOException e) {
+            return ErrorCode.IO_ERROR;
+        }
+
+        return ErrorCode.SUCCESS;
     }
 
     public Pair<Integer,List<Bidding>> retrieveBids(String userId){ // Problem 2-2
-        
-        return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+        File userFile = new File(USER_PATH, userId);
+        if(!userFile.exists()) return new Pair<>(ErrorCode.USERID_NOT_FOUND, new ArrayList<>());
+
+        File bidsFile = new File(userFile, "bid.txt");
+        List<Bidding> bids = new ArrayList<>();
+
+        try(Scanner input = new Scanner(bidsFile)){
+            while(input.hasNextLine()){
+                String[] content = input.nextLine().split("\\|");
+                int cousrId = Integer.parseInt(content[0]);
+                int mileage = Integer.parseInt(content[1]);
+                bids.add(new Bidding(cousrId, mileage));
+            }
+        }catch(IOException e){
+            return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+        }
+        return new Pair<>(ErrorCode.SUCCESS, bids);
     }
+
+
 
     public boolean confirmBids(){ // Problem 2-3
         
