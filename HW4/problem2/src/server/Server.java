@@ -79,6 +79,12 @@ public class Server {
         return null;
     }
 
+    private File getUserFileFromID(String userId){
+        File userFile = new File(USER_PATH, userId);
+        if(!userFile.exists()) return null;
+        return userFile;
+    }
+
     private List<Course> getFilteredCollegeCourses(String college,  Map<String,Object> searchConditions){
         File collegeDir = new File(COURSE_PATH, college);
         File[] courseFiles = getValidFiles(collegeDir);
@@ -172,6 +178,12 @@ public class Server {
         if(mileage != 0) bids.add(new Bidding(courseId, mileage));
     }
 
+    private int getTotalBidsMilage(List<Bidding> bids){
+        int totBids = 0;
+        for(Bidding bid : bids) totBids += bid.mileage;
+        return totBids;
+    }
+
     private void writeBidTxt(List<Bidding> bids, String userId) throws IOException{
         File bidFile = new File(USER_PATH + userId + "/bid.txt");
         try(FileWriter output = new FileWriter(bidFile)){
@@ -194,9 +206,7 @@ public class Server {
         updateBidsList(retBids.value, courseId, mileage);
         if(retBids.value.size() > Config.MAX_COURSE_NUMBER) return ErrorCode.OVER_MAX_COURSE_NUMBER;
         
-        int totBids = 0;
-        for(Bidding bid : retBids.value) totBids += bid.mileage;
-        if(totBids > Config.MAX_MILEAGE) return ErrorCode.OVER_MAX_MILEAGE;
+        if(getTotalBidsMilage(retBids.value) > Config.MAX_MILEAGE) return ErrorCode.OVER_MAX_MILEAGE;
         
         try {
             writeBidTxt(retBids.value, userId);
@@ -208,8 +218,8 @@ public class Server {
     }
 
     public Pair<Integer,List<Bidding>> retrieveBids(String userId){ // Problem 2-2
-        File userFile = new File(USER_PATH, userId);
-        if(!userFile.exists()) return new Pair<>(ErrorCode.USERID_NOT_FOUND, new ArrayList<>());
+        File userFile = getUserFileFromID(userId);
+        if(userFile == null) return new Pair<>(ErrorCode.USERID_NOT_FOUND, new ArrayList<>());
 
         File bidsFile = new File(userFile, "bid.txt");
         List<Bidding> bids = new ArrayList<>();
@@ -228,14 +238,96 @@ public class Server {
     }
 
 
+    private void writeRegTxt(Map<String, List<Integer>> regMap) throws IOException{
+        for(String userId : regMap.keySet()){
+            File userFile = getUserFileFromID(userId);
+            File regFile = new File(userFile, "reg.txt");
+            List<Integer> courses = regMap.get(userId);
+            try(FileWriter output = new FileWriter(regFile)){
+                for(Integer courseId : courses) output.write(courseId + "\n");
+            }
+        }
+    }
+
+    private Pair<Map<Integer, List<Pair<Integer, String>>>, Map<String, Integer>> getBidsInfo(){
+        Map<Integer, List<Pair<Integer, String>>> courseMap = new HashMap<>();
+        Map<String, Integer> totBidsMap = new HashMap<>(); 
+        File[] userFiles = getValidFiles(new File(USER_PATH));
+        for(File userFile : userFiles){
+            String userId = userFile.getName();
+            Pair<Integer, List<Bidding>> retBids = retrieveBids(userId);
+
+            totBidsMap.put(userId, getTotalBidsMilage(retBids.value));
+
+            if(retBids.key == ErrorCode.SUCCESS){
+                for(Bidding bid : retBids.value){
+                    Integer courseId = bid.courseId, mileage = bid.mileage;
+                    if(courseMap.get(courseId) == null) courseMap.put(courseId, new ArrayList<>());
+                    courseMap.get(courseId).add(new Pair<>(mileage, userId));
+                }
+            }else return new Pair<>(null, null);
+        }
+        return new Pair<>(courseMap, totBidsMap);
+    }
+
+    private Map<String, List<Integer>> getRegMap(Map<Integer, List<Pair<Integer, String>>> courseMap, Map<String, Integer> totBidsMap){
+        Map<String, List<Integer>> regMap = new HashMap<>();
+        for(Integer courseId : courseMap.keySet()){
+            List<Pair<Integer, String>> users = courseMap.get(courseId);
+            Course course = getCourseFromId(courseId);
+            if(users == null) continue;
+            if(users.size() > course.quota){
+                Collections.sort(users, new Comparator<Pair<Integer, String>>(){
+                    @Override
+                    public int compare(Pair<Integer, String> p1, Pair<Integer, String> p2) {
+                        int res = Integer.compare(p2.key, p1.key);
+                        if(res != 0) return res;
+                        res = Integer.compare(totBidsMap.get(p1.value), totBidsMap.get(p2.value));
+                        if(res != 0) return res;
+                        return p1.value.compareTo(p2.value);
+                    }
+
+                });
+                users = users.subList(0, course.quota);
+            }
+            for(Pair<Integer, String> user : users){
+                String userId = user.value;
+                if(regMap.get(userId) == null) regMap.put(userId, new ArrayList<>());
+                regMap.get(userId).add(courseId);
+            }
+        }
+        return regMap;
+    }
 
     public boolean confirmBids(){ // Problem 2-3
+        // Pair<courseMap, totBidsMap);
+        Pair<Map<Integer, List<Pair<Integer, String>>>,Map<String, Integer>> bidsInfo = getBidsInfo();
+        if(bidsInfo.key == null) return false;
+
+        try {writeRegTxt(getRegMap(bidsInfo.key, bidsInfo.value));}
+        catch(IOException e) {return false;}
         
-        return false;
+        return true;
     }
 
     public Pair<Integer,List<Course>> retrieveRegisteredCourse(String userId){ // Problem 2-3
+        File userFile = getUserFileFromID(userId);
+        if(userFile == null) return new Pair<>(ErrorCode.USERID_NOT_FOUND, new ArrayList<>());
+
+        File regFile = new File(userFile, "reg.txt");
         
-        return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+        List<Course> courses = new ArrayList<>();
+        if(regFile.exists()){
+            try(Scanner input = new Scanner(regFile)){
+                while(input.hasNextLine()){
+                    int courseId = Integer.parseInt(input.nextLine());
+                    courses.add(getCourseFromId(courseId));
+                }
+            }catch(IOException e){
+                return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+            }
+        }
+
+        return new Pair<>(ErrorCode.SUCCESS, courses);
     }
 }
