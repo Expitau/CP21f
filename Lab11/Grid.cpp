@@ -2,6 +2,8 @@
 
 //TODO Prob1.4
 
+int Grid::markCnt = 1;
+
 Grid::Grid(int r, int c): row(r), column(c) {
     grid = new int*[row];
     for(int i=0; i<row; i++) grid[i] = new int[column];
@@ -26,6 +28,16 @@ void Grid::printGrid() {
     for(int i=0; i<row; i++){
         for(int j=0; j<column; j++) std::cout << grid[i][j] << " ";
         std::cout << std::endl;
+    }
+}
+
+bool Grid::check_valid_point(Point p) {
+    return 0 <= p.getX() && p.getX() < row && 0 <= p.getY() && p.getY() < column;
+}
+
+void Grid::mark_point(Point p) {
+    if(check_valid_point(p)){
+        grid[p.getX()][p.getY()] = markCnt++;
     }
 }
 

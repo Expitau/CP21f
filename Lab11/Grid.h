@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "Point.h"
 #ifndef GRID_H
 #define GRID_H
 
@@ -8,6 +8,7 @@
 class Grid {
     int **grid;
     int row, column;
+    static int markCnt;
 public:
     //TODO Prob1.1 initialize Grid with zeros
     Grid(int r, int c);
@@ -23,6 +24,10 @@ public:
     void setAt(int r, int c, int v);
 
     void printGrid();
+
+    bool check_valid_point(Point p);
+
+    void mark_point(Point p);
 
     Grid(Grid const &g);
 
