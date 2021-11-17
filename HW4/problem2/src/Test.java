@@ -14,6 +14,7 @@ import java.util.*;
 
 public class Test {
     public static void main(String[] args) {
+        resetUserDirs();
         Problem2_1TestCase();
         Problem2_2TestCase();
         Problem2_3TestCase();
@@ -22,9 +23,9 @@ public class Test {
 
     static void printOX(String prompt, boolean condition) {
         if (condition) {
-            System.out.println("------" + prompt + "O");
+            System.out.println("------" + prompt + " O");
         } else {
-            System.out.println("------" + prompt + "X");
+            System.out.println("------" + prompt + " X");
         }
     }
 

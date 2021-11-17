@@ -1,6 +1,7 @@
 package server;
 
 import course.*;
+import utils.UserBids;
 import utils.Config;
 import utils.ErrorCode;
 import utils.Pair;
@@ -80,6 +81,7 @@ public class Server {
     }
 
     private File getUserFileFromID(String userId){
+        if(userId == null) return null;
         File userFile = new File(USER_PATH, userId);
         if(!userFile.exists()) return null;
         return userFile;
@@ -179,6 +181,7 @@ public class Server {
     }
 
     private int getTotalBidsMilage(List<Bidding> bids){
+        if(bids == null) return 0;
         int totBids = 0;
         for(Bidding bid : bids) totBids += bid.mileage;
         return totBids;
@@ -194,27 +197,38 @@ public class Server {
     }
 
     public int bid(int courseId, int mileage, String userId){ // Problem 2-2
-        if(mileage < 0) return ErrorCode.NEGATIVE_MILEAGE;
-        if(mileage > Config.MAX_MILEAGE_PER_COURSE) return ErrorCode.OVER_MAX_COURSE_MILEAGE;
-        
-        Course course = getCourseFromId(courseId);
-        if(course == null) return ErrorCode.NO_COURSE_ID;
-        
+        int errorCode = ErrorCode.SUCCESS;
+
+        // USER_CHECK
         Pair<Integer, List<Bidding>> retBids = retrieveBids(userId);
-        if(retBids.key != ErrorCode.SUCCESS) return retBids.key; // user_checked and IOEXCEPTIN
-        
-        updateBidsList(retBids.value, courseId, mileage);
-        if(retBids.value.size() > Config.MAX_COURSE_NUMBER) return ErrorCode.OVER_MAX_COURSE_NUMBER;
-        
-        if(getTotalBidsMilage(retBids.value) > Config.MAX_MILEAGE) return ErrorCode.OVER_MAX_MILEAGE;
-        
-        try {
-            writeBidTxt(retBids.value, userId);
-        } catch (IOException e) {
-            return ErrorCode.IO_ERROR;
+        if(retBids.key != ErrorCode.SUCCESS){
+            errorCode = Math.min(errorCode, retBids.key);
         }
 
-        return ErrorCode.SUCCESS;
+        // COURSE_CHECK
+        Course course = getCourseFromId(courseId);
+        if(course == null) errorCode = Math.min(errorCode, ErrorCode.NO_COURSE_ID);
+        
+        // MILEAGE_CHECK
+        if(mileage < 0) errorCode = Math.min(errorCode, ErrorCode.NEGATIVE_MILEAGE);
+        if(mileage > Config.MAX_MILEAGE_PER_COURSE) errorCode = Math.min(errorCode, ErrorCode.OVER_MAX_COURSE_MILEAGE);
+        
+        // UPDATE_MILEAGE
+        if(errorCode == ErrorCode.SUCCESS){
+            updateBidsList(retBids.value, courseId, mileage);
+            if(retBids.value.size() > Config.MAX_COURSE_NUMBER) 
+                errorCode = Math.min(errorCode, ErrorCode.OVER_MAX_COURSE_NUMBER);
+            
+            if(getTotalBidsMilage(retBids.value) > Config.MAX_MILEAGE) 
+                errorCode = Math.min(errorCode, ErrorCode.OVER_MAX_MILEAGE);
+            
+            if(errorCode == ErrorCode.SUCCESS){
+                try{writeBidTxt(retBids.value, userId);}
+                catch(IOException e){errorCode = Math.min(errorCode, ErrorCode.IO_ERROR);}
+            }
+        }
+        
+        return errorCode;
     }
 
     public Pair<Integer,List<Bidding>> retrieveBids(String userId){ // Problem 2-2
@@ -223,7 +237,7 @@ public class Server {
 
         File bidsFile = new File(userFile, "bid.txt");
         List<Bidding> bids = new ArrayList<>();
-
+        
         try(Scanner input = new Scanner(bidsFile)){
             while(input.hasNextLine()){
                 String[] content = input.nextLine().split("\\|");
@@ -232,11 +246,74 @@ public class Server {
                 bids.add(new Bidding(cousrId, mileage));
             }
         }catch(IOException e){
-            return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+            return new Pair<>(ErrorCode.IO_ERROR, new ArrayList<>());
         }
+
         return new Pair<>(ErrorCode.SUCCESS, bids);
     }
 
+    private void removeBids(){
+        File[] userFiles = getValidFiles(new File(USER_PATH));
+        for(File userFile : userFiles){
+            File bidTxt = new File(userFile, "bid.txt");
+            try(FileWriter output = new FileWriter(bidTxt)){
+                output.write("");
+            } catch (Exception e) {
+
+            }
+        }
+    }
+    
+    private Map<Integer, List<UserBids>> getBidsInfo(){
+        Map<Integer, List<UserBids>> ret = new HashMap<>();
+        File[] userFiles = getValidFiles(new File(USER_PATH));
+        for(File userFile : userFiles){
+            String userId = userFile.getName();
+            Pair<Integer, List<Bidding>> retBids = retrieveBids(userId);
+            int totMileage = getTotalBidsMilage(retBids.value);
+
+            if(retBids.key == ErrorCode.SUCCESS){
+                for(Bidding bid : retBids.value){
+                    Integer courseId = bid.courseId, mileage = bid.mileage;
+                    if(ret.get(courseId) == null) ret.put(courseId, new ArrayList<>());
+                    ret.get(courseId).add(new UserBids(userId, mileage, totMileage));
+                }
+            }else return null;
+        }
+
+        return ret;
+    }
+
+    private Map<String, List<Integer>> getRegMap(Map<Integer, List<UserBids>> bidsInfo){
+        Map<String, List<Integer>> regMap = new HashMap<>();
+
+        for(Integer courseId : bidsInfo.keySet()){
+            List<UserBids> users = bidsInfo.get(courseId);
+            Course course = getCourseFromId(courseId);
+
+            if(users == null) continue;
+            if(users.size() > course.quota){
+                Collections.sort(users, new Comparator<UserBids>(){
+                    @Override
+                    public int compare(UserBids p1, UserBids p2) {
+                        int res = Integer.compare(p2.mileage, p1.mileage);
+                        if(res != 0) return res;
+                        res = Integer.compare(p1.totMileage, p2.totMileage);
+                        if(res != 0) return res;
+                        return p1.userId.compareTo(p2.userId);
+                    }
+                });
+                users = users.subList(0, course.quota);
+            }
+
+            for(UserBids user : users){
+                String userId = user.userId;
+                if(regMap.get(userId) == null) regMap.put(userId, new ArrayList<>());
+                regMap.get(userId).add(courseId);
+            }
+        }
+        return regMap;
+    }
 
     private void writeRegTxt(Map<String, List<Integer>> regMap) throws IOException{
         for(String userId : regMap.keySet()){
@@ -249,63 +326,18 @@ public class Server {
         }
     }
 
-    private Pair<Map<Integer, List<Pair<Integer, String>>>, Map<String, Integer>> getBidsInfo(){
-        Map<Integer, List<Pair<Integer, String>>> courseMap = new HashMap<>();
-        Map<String, Integer> totBidsMap = new HashMap<>(); 
-        File[] userFiles = getValidFiles(new File(USER_PATH));
-        for(File userFile : userFiles){
-            String userId = userFile.getName();
-            Pair<Integer, List<Bidding>> retBids = retrieveBids(userId);
-
-            totBidsMap.put(userId, getTotalBidsMilage(retBids.value));
-
-            if(retBids.key == ErrorCode.SUCCESS){
-                for(Bidding bid : retBids.value){
-                    Integer courseId = bid.courseId, mileage = bid.mileage;
-                    if(courseMap.get(courseId) == null) courseMap.put(courseId, new ArrayList<>());
-                    courseMap.get(courseId).add(new Pair<>(mileage, userId));
-                }
-            }else return new Pair<>(null, null);
-        }
-        return new Pair<>(courseMap, totBidsMap);
-    }
-
-    private Map<String, List<Integer>> getRegMap(Map<Integer, List<Pair<Integer, String>>> courseMap, Map<String, Integer> totBidsMap){
-        Map<String, List<Integer>> regMap = new HashMap<>();
-        for(Integer courseId : courseMap.keySet()){
-            List<Pair<Integer, String>> users = courseMap.get(courseId);
-            Course course = getCourseFromId(courseId);
-            if(users == null) continue;
-            if(users.size() > course.quota){
-                Collections.sort(users, new Comparator<Pair<Integer, String>>(){
-                    @Override
-                    public int compare(Pair<Integer, String> p1, Pair<Integer, String> p2) {
-                        int res = Integer.compare(p2.key, p1.key);
-                        if(res != 0) return res;
-                        res = Integer.compare(totBidsMap.get(p1.value), totBidsMap.get(p2.value));
-                        if(res != 0) return res;
-                        return p1.value.compareTo(p2.value);
-                    }
-
-                });
-                users = users.subList(0, course.quota);
-            }
-            for(Pair<Integer, String> user : users){
-                String userId = user.value;
-                if(regMap.get(userId) == null) regMap.put(userId, new ArrayList<>());
-                regMap.get(userId).add(courseId);
-            }
-        }
-        return regMap;
-    }
 
     public boolean confirmBids(){ // Problem 2-3
-        // Pair<courseMap, totBidsMap);
-        Pair<Map<Integer, List<Pair<Integer, String>>>,Map<String, Integer>> bidsInfo = getBidsInfo();
-        if(bidsInfo.key == null) return false;
-
-        try {writeRegTxt(getRegMap(bidsInfo.key, bidsInfo.value));}
-        catch(IOException e) {return false;}
+        try {
+            Map<Integer, List<UserBids>> bidsInfo = getBidsInfo();
+            if(bidsInfo == null) throw new IOException();
+            Map<String, List<Integer>> regMap = getRegMap(bidsInfo);
+            writeRegTxt(regMap);
+        }catch(IOException e) {
+            return false;
+        }finally{
+            removeBids();
+        }
         
         return true;
     }
@@ -317,15 +349,14 @@ public class Server {
         File regFile = new File(userFile, "reg.txt");
         
         List<Course> courses = new ArrayList<>();
-        if(regFile.exists()){
-            try(Scanner input = new Scanner(regFile)){
-                while(input.hasNextLine()){
-                    int courseId = Integer.parseInt(input.nextLine());
-                    courses.add(getCourseFromId(courseId));
-                }
-            }catch(IOException e){
-                return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
+
+        try(Scanner input = new Scanner(regFile)){
+            while(input.hasNextLine()){
+                int courseId = Integer.parseInt(input.nextLine());
+                courses.add(getCourseFromId(courseId));
             }
+        }catch(IOException e){
+            return new Pair<>(ErrorCode.IO_ERROR,new ArrayList<>());
         }
 
         return new Pair<>(ErrorCode.SUCCESS, courses);
