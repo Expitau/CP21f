@@ -10,6 +10,16 @@ Grid::Grid(int r, int c): row(r), column(c) {
     initialize_with_zeros();
 }
 
+Grid::Grid(int r, int c, int ** g):row(r), column(c){
+    grid = new int*[row];
+    for(int i=0; i<row; i++){
+        grid[i] = new int[column];
+        for(int j=0; j<column; j++) grid[i][j] = g[i][j];
+    }
+}
+
+Grid::Grid(Grid const &g): Grid(g.row, g.column, g.grid) {}
+
 void Grid::initialize_with_zeros() {
     for(int i=0; i<row; i++){
         for(int j=0; j<column; j++) grid[i][j] = 0;
@@ -41,14 +51,7 @@ void Grid::mark_point(Point p) {
     }
 }
 
-Grid::Grid(Grid const &g): row(g.getRow()), column(g.getColumn()){
-    grid = new int*[row];
-    for(int i=0; i<row; i++) grid[i] = new int[column];
 
-    for(int i=0; i<row; i++){
-        for(int j=0; j<column; j++) grid[i][j] = g.getAt(i, j);
-    }
-}
 
 Grid::~Grid(){
     std::cout<<"Clean-up Grid" << std::endl;

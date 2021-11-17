@@ -13,6 +13,10 @@ public:
     //TODO Prob1.1 initialize Grid with zeros
     Grid(int r, int c);
 
+    Grid(int r, int c, int ** g);
+
+    Grid(Grid const &g);
+
     void initialize_with_zeros();
 
     int getRow() const;
@@ -28,8 +32,6 @@ public:
     bool check_valid_point(Point p);
 
     void mark_point(Point p);
-
-    Grid(Grid const &g);
 
     ~Grid();
 };
