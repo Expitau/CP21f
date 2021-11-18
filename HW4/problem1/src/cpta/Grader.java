@@ -162,6 +162,7 @@ public class Grader {
 
     private String getProblemSubPath(String studentSubPath, String problemId){
         String problemSubPath = studentSubPath + problemId + "/";
+        if(!(new File(problemSubPath).exists())) return null;
         File[] folders = getFolders(new File(problemSubPath));
 
         if(folders.length > 1) return null;
