@@ -287,6 +287,14 @@ public class Server {
     private Map<String, List<Integer>> getRegMap(Map<Integer, List<UserBids>> bidsInfo){
         Map<String, List<Integer>> regMap = new HashMap<>();
 
+        // avoid none reg file with empty bid file
+        File[] userFiles = getValidFiles(new File(USER_PATH)); 
+        for(File userFile : userFiles){
+            if(new File(userFile, "bid.txt").exists()){
+                regMap.put(userFile.getName(), new ArrayList<>());
+            }
+        }
+
         for(Integer courseId : bidsInfo.keySet()){
             List<UserBids> users = bidsInfo.get(courseId);
             Course course = getCourseFromId(courseId);
@@ -321,7 +329,8 @@ public class Server {
             File regFile = new File(userFile, "reg.txt");
             List<Integer> courses = regMap.get(userId);
             try(FileWriter output = new FileWriter(regFile)){
-                for(Integer courseId : courses) output.write(courseId + "\n");
+                if(courses.isEmpty()) output.write("");
+                else for(Integer courseId : courses) output.write(courseId + "\n");
             }
         }
     }
