@@ -211,6 +211,13 @@ public class Grader {
             return scores;
         }
         
+        Collections.sort(problem.testCases, new Comparator<TestCase>() {
+            @Override
+            public int compare(TestCase o1, TestCase o2){
+                return o1.id.compareTo(o2.id);
+            }
+        });
+
         for(TestCase testCase : problem.testCases){
             try {
                 scores.add(scoreTestCase(problem, testCase, problemSubPath, execPath) * hasSugoFile);
