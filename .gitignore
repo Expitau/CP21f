@@ -40,3 +40,4 @@ goorm.manifest
 # Clion
 cmake-build-*/
 CMakeLists.txt
+*.out
