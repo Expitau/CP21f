@@ -61,7 +61,8 @@ void read_csi(const char* filename, CSI* csi) {
 }
 
 double get_amplitude(Complex c){
-    return sqrt(c.real*c.real + c.imag*c.imag);
+    double real = c.real, imag = c.imag;
+    return sqrt(real*real + imag*imag);
 }
 
 double** decode_csi(CSI* csi) {
@@ -84,8 +85,8 @@ double* get_med(double** decoded_csi, int num_packets, int packet_length) {
 
     for(int i=0; i<num_packets; i++){
         for(int j=0; j<packet_length; j++) temp[j] = decoded_csi[i][j];
-        std::nth_element(temp,  temp + packet_length/2, temp+packet_length);
-        std::nth_element(temp,  temp + (packet_length-1)/2, temp+packet_length);
+
+        std::sort(temp, temp+packet_length); // TODO ..........
         med[i] = (temp[(packet_length-1)/2] + temp[packet_length/2])/2.0;
     }
 
