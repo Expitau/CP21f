@@ -9,7 +9,8 @@ Post::Post(std::string title, std::string content):Post(ID_NOT_INITIATED, std::t
 
 Post::Post(int id_, std::time_t date_time_, std::string title_, std::string content_):id(id_), date_time(date_time_), title(title_), content(content_) {
     // content trim!!!!!
-    content = content.erase(content.find_last_not_of(" \n\r\t")+1);
+
+    content.erase(content.find_last_not_of(" \n\r\t")+1);
 }
 
 std::string Post::get_summary() {
@@ -72,7 +73,6 @@ void PostSimilar::calculate_cnt(const std::set<std::string> & keyword_set) {
 
     while(!title_ss.eof()){
         title_ss>>tmp;
-        tot_cnt++;
         if(keyword_set.find(tmp) != keyword_set.end()) same_cnt++;
     }
 
